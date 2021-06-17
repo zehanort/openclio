@@ -60,4 +60,6 @@ def argsIOrole(kernelname, source, arglist=False):
         if buffer in iorole.keys() and iorole[buffer] == 'output':
             iorole[buffer] = 'input/output'
 
-    return iorole if not arglist else iorole, [str(a) for a in f.arguments]
+    if arglist:
+        return iorole, [str(a) for a in f.arguments]
+    return iorole
