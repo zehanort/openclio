@@ -15,7 +15,7 @@ setup(
     download_url = 'https://github.com/zehanort/openclio/releases',
     license =      'MIT',
     classifiers = [
-        'Development role :: 3 - Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: Other Audience',
         'Intended Audience :: Science/Research',
@@ -23,6 +23,7 @@ setup(
         'Operating System :: OS Independent',
         'Natural Language :: English',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3 :: Only',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities'
     ],
