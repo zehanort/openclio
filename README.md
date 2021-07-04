@@ -1,5 +1,7 @@
 # `openclio`
 
+![PyPI](https://img.shields.io/pypi/v/openclio?color=dark%20green&label=PyPI%20release)
+
 A tool to quickly figure out the input and output arguments of an OpenCL kernel.
 
 ## 1. What is `openclio`?
@@ -186,14 +188,14 @@ Lastly, `openclio` exposes a `--tablefmt` flag that controls the layout of the o
 ```Python console
 >>> from openclio import argsIOrole
 >>> from pprint import pprint
->>> 
+>>>
 >>> with open('examples/involved.ll', 'r') as f:
 ...     source = f.read()
-... 
+...
 >>> args_IO_role = argsIOrole('involved', source)  # 1st argument is the kernel name
 >>> type(args_IO_role)
 <class 'dict'>
->>> 
+>>>
 >>> pprint(args_IO_role)
 {'i32 %h': 'input',
  'i32* %a': 'input',
