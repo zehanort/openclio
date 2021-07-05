@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-f', '--file',
     type=str,
     required=True,
-    help='the *.ll file (i.e., LLVM IR) with the OpenCL kernel(s)'
+    help='the *.cl or *.ll file with the OpenCL kernel(s)'
 )
 
 parser.add_argument('-k', '--kernel',
@@ -41,7 +41,7 @@ def run():
     with open(args.file, 'r') as f:
         source = f.read()
 
-    iorole, arglist = argsIOrole(args.kernel, source, arglist=True)
+    iorole, arglist = argsIOrole(args.kernel, source, args.file, arglist=True)
 
     # pretty print results
     column_labels = ['Name', 'Type', 'Input', 'Output']

@@ -1,8 +1,28 @@
 import llvmlite.binding as llvm
 
-def argsIOrole(kernelname, source, arglist=False):
+def argsIOrole(kernelname, source, filename=None, arglist=False):
 
-    m = llvm.parse_assembly(source)
+    try:
+        m = llvm.parse_assembly(source)
+    except RuntimeError: # it is source code, not LLVM IR
+
+        if filename is None:
+            raise ValueError('The filename argument must not be None if source code (and not LLVM IR) is provided')
+
+        import tempfile
+        import subprocess as sp
+
+        llvmIRfile = tempfile.NamedTemporaryFile('r+')
+        outs = sp.run(
+            f'clang -c -x cl -emit-llvm -S -cl-std=CL2.0 -Xclang -finclude-default-header -fno-discard-value-names {filename} -o {llvmIRfile.name}'.split(),
+            stdout=sp.PIPE, stderr=sp.PIPE
+        )
+
+        if outs.stderr != b'':
+            raise RuntimeError('Compilation of the provided source file failed:\n' + outs.stderr.decode('ascii'))
+
+        with open(llvmIRfile.name, 'r') as f:
+            m = llvm.parse_assembly(f.read())
 
     try:
         f = m.get_function(kernelname)

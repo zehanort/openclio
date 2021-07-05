@@ -12,7 +12,7 @@ In many engineering and predictive tasks involving OpenCL kernels, it is unfortu
 2. its lack impedes the rapid development of testing hostcode in order to proceed to dynamic analysis and experiments,
 3. it is crucial to understand what type of data we need in order to use the kernel and what type of output(s) we should expect.
 
-Well, you should fear no more! `openclio` (*"Open Clio"* - OpenCL Input/Output) is a pure Python 3 tool created to address exactly this problem. Through a lightweight static analysis of the LLVM IR produced after compiling a kernel file, `openclio` classifies each argument as **input only**, **output only** or **input/output**.
+Well, you should fear no more! `openclio` (*"Open Clio"* - OpenCL Input/Output) is a pure Python 3 tool created to address exactly this problem. Through a lightweight static analysis of the kernel file or the LLVM IR produced after compiling it, `openclio` classifies each argument as **input only**, **output only** or **input/output**.
 
 ## 2. Installation
 
@@ -24,13 +24,15 @@ $ pip install openclio
 
 ## 3. Usage & Examples
 
-To use `openclio` to classify the arguments of an OpenCL kernel, first we need to compile it to LLVM IR (i.e., the intermediate representation used by OpenCL). One way to achieve this is by using the LLVM compiler `clang`:
+To use `openclio` to classify the arguments of an OpenCL kernel, one can either use the kernel file of interest directly or an LLVM IR version of it (i.e., the intermediate representation used by OpenCL). For the latter, make sure that the LLVM IR file has been produced in a way similar to the following:
 
 ```
 $ clang -c -x cl -emit-llvm -S -cl-std=CL2.0 -Xclang -finclude-default-header -fno-discard-value-names examples/vadd1.cl -o examples/vadd1.ll
 ```
 
-**IMPORTANT NOTE**: Whatever you do to compile your kernel to LLVM IR, **make sure to keep the initial argument names**. In the example above, `clang` would have discarded and replaced them with other identifiers of its liking had we not used the `-fno-discard-value-names` flag!
+**IMPORTANT NOTE 1**: Whatever you do to compile your kernel to LLVM IR, **make sure to keep the initial argument names**. In the example above, `clang` would have discarded and replaced them with other identifiers of its liking had we not used the `-fno-discard-value-names` flag!
+
+**IMPORTANT NOTE 2**: If you intend to use `openclio` with kernel files directly, make sure that `clang` (i.e., the default compiler of the LLVM ecosystem) is installed on your machine and is visible as `clang` from your command line.
 
 We are now ready to see `openclio` in action!
 
@@ -49,8 +51,8 @@ __kernel void vadd(__global int *a, __global int *b, __global int *c, uint count
 You can use `openclio` from the command line as such:
 
 ```
-$ openclio -f examples/vadd1.ll -k vadd
-I/O role of the arguments of OpenCL kernel examples/vadd1.ll:vadd
+$ openclio -f examples/vadd1.cl -k vadd
+I/O role of the arguments of OpenCL kernel examples/vadd1.cl:vadd
 ╒════════════╤════════╤════════╤═════════╤══════════╕
 │   Position │  Name  │  Type  │  Input  │  Output  │
 ╞════════════╪════════╪════════╪═════════╪══════════╡
@@ -64,7 +66,7 @@ I/O role of the arguments of OpenCL kernel examples/vadd1.ll:vadd
 ╘════════════╧════════╧════════╧═════════╧══════════╛
 ```
 
-You can see that `openclio` figures out that `c` is the only argument that is written, and therefore consides it to be the kernel output. But what if we also write to one of the first 2 arguments, say `a`? Check [vadd2](examples/vadd2.cl) for example:
+You can see that `openclio` figures out that `c` is the only argument that is written to, and therefore considers it to be the kernel output. But what if we also write to one of the first 2 arguments, say `a`? Check [vadd2](examples/vadd2.cl) for example:
 
 ```opencl
 __kernel void vadd(__global int *a, __global int *b, __global int *c, uint count) {
@@ -79,8 +81,8 @@ __kernel void vadd(__global int *a, __global int *b, __global int *c, uint count
 After compiling it and feeding the LLVM IR to `openclio`, we see that it figured out that argument `a` is used simultaneously as input and output:
 
 ```
-$ openclio -f examples/vadd2.ll -k vadd
-I/O role of the arguments of OpenCL kernel examples/vadd2.ll:vadd
+$ openclio -f examples/vadd2.cl -k vadd
+I/O role of the arguments of OpenCL kernel examples/vadd2.cl:vadd
 ╒════════════╤════════╤════════╤═════════╤══════════╕
 │   Position │  Name  │  Type  │  Input  │  Output  │
 ╞════════════╪════════╪════════╪═════════╪══════════╡
@@ -115,8 +117,8 @@ __kernel void involved(const __global int* a, const __global int* b, const __glo
 If you carefully study the output of `openclio` you will realize that all arguments have been correctly classified:
 
 ```
-$ openclio -f examples/involved.ll -k involved
-I/O role of the arguments of OpenCL kernel examples/involved.ll:involved
+$ openclio -f examples/involved.cl -k involved
+I/O role of the arguments of OpenCL kernel examples/involved.cl:involved
 ╒════════════╤════════╤════════╤═════════╤══════════╕
 │   Position │  Name  │  Type  │  Input  │  Output  │
 ╞════════════╪════════╪════════╪═════════╪══════════╡
@@ -162,8 +164,8 @@ __kernel void casts(__global double* a, __global double* b, int c, int d, int e)
 Here, arguments `a` and `b` have been casted to 2 new local variables. Again, `openclio` manages to correctly detect that `a` is the kernel's sole output, while also being used as input:
 
 ```
-$ openclio -f examples/casts.ll -k casts
-I/O role of the arguments of OpenCL kernel examples/casts.ll:casts
+$ openclio -f examples/casts.cl -k casts
+I/O role of the arguments of OpenCL kernel examples/casts.cl:casts
 ╒════════════╤════════╤═════════╤═════════╤══════════╕
 │   Position │  Name  │  Type   │  Input  │  Output  │
 ╞════════════╪════════╪═════════╪═════════╪══════════╡
