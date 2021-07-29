@@ -63,22 +63,30 @@ def argsIOrole(kernelname, source, filename=None, arglist=False):
                 if i.name == bufferidx:
                     gep = i
 
-        if gep.opcode != 'getelementptr':
-            # it is not a buffer write, not interested
-            continue
+        # prepare case where a value is loaded from a bitcasted reference
+        if 'bitcast' in str(loadfrom):
 
-        buffer = str(list(gep.operands)[0])
+            bitcasted = list(filter(lambda x: x.startswith('%'), str(loadfrom).split()))[-1].split('%')[-1]
 
-        # is the buffer a bitcast? (i.e. a "renaming" of the kernel argument via a pointer)
-        while 'bitcast' in buffer:
-            buffer = buffer.split('bitcast ')[1].split(' to')[0]
             for b in f.blocks:
                 for i in b.instructions:
-                    if i.name == buffer:
-                        buffer = i
+                    if i.name == bitcasted:
+                        gep = i
 
-        if buffer in iorole.keys() and iorole[buffer] == 'output':
-            iorole[buffer] = 'input/output'
+        if gep.opcode == 'getelementptr':
+
+            buffer = str(list(gep.operands)[0])
+
+            # is the buffer a bitcast? (i.e. a "renaming" of the kernel argument via a pointer)
+            while 'bitcast' in buffer:
+                buffer = buffer.split('bitcast ')[1].split(' to')[0]
+                for b in f.blocks:
+                    for i in b.instructions:
+                        if i.name == buffer:
+                            buffer = i
+
+            if buffer in iorole.keys() and iorole[buffer] == 'output':
+                iorole[buffer] = 'input/output'
 
     if arglist:
         return iorole, [str(a) for a in f.arguments]

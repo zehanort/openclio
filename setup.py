@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name =                          'openclio',
-    version =                       '0.2',
+    version =                       '0.3',
     description =                   'OpenCL Input/Output',
     long_description =              open('README.md', 'r').read(),
     long_description_content_type = 'text/markdown',
